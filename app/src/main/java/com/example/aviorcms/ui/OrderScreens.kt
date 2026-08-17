@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.example.aviorcms.CmsViewModel
+import com.example.aviorcms.R
 import com.example.aviorcms.api.InlineNewClient
 
 @Composable
@@ -625,10 +627,10 @@ fun OrderDetailScreen(
                                 Icon(Icons.Default.Sms, contentDescription = "SMS")
                             }
                             FilledTonalIconButton(onClick = { openWhatsAppChat(order.clientPhone) }) {
-                                Icon(Icons.Default.Chat, contentDescription = "WhatsApp")
+                                Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "WhatsApp")
                             }
                             FilledTonalIconButton(onClick = { openTelegramChat(order.clientPhone) }) {
-                                Icon(Icons.Default.Send, contentDescription = "Telegram")
+                                Icon(painterResource(id = R.drawable.ic_telegram), contentDescription = "Telegram")
                             }
                         }
                     }
