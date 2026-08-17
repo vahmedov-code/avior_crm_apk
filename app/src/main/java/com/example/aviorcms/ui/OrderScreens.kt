@@ -431,6 +431,40 @@ fun OrderDetailScreen(
         }
     }
 
+    // Быстрая связь с клиентом (иконки рядом с карточкой заказа) — не
+    // про пересылку документов, просто открыть звонок/чат с его номером,
+    // чтобы не искать контакт отдельно.
+    fun callClient(phone: String) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_DIAL, "tel:$phone".toUri()))
+        } catch (_: Exception) {
+            Toast.makeText(context, "Не удалось открыть набор номера", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun smsClient(phone: String) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_SENDTO, "smsto:$phone".toUri()))
+        } catch (_: Exception) {
+            Toast.makeText(context, "Не удалось открыть SMS", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun openWhatsAppChat(phone: String) {
+        try {
+            val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+            context.startActivity(Intent(Intent.ACTION_VIEW, "https://api.whatsapp.com/send?phone=$cleanPhone".toUri()))
+        } catch (_: Exception) {
+            Toast.makeText(context, "WhatsApp не установлен", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun openTelegramChat(phone: String) {
+        try {
+            val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+            context.startActivity(Intent(Intent.ACTION_VIEW, "tg://resolve?phone=$cleanPhone".toUri()))
+        } catch (_: Exception) {
+            Toast.makeText(context, "Telegram не установлен, либо номер не привязан к аккаунту", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     LaunchedEffect(orderId) {
         if (order == null) viewModel.loadOrders(null)
     }
@@ -578,6 +612,24 @@ fun OrderDetailScreen(
                             Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(text = "Клиент: ${order.clientName}")
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        // Быстрая связь — не про пересылку документов
+                        // (то ниже, в блоке «Документы»), а чтобы сразу
+                        // позвонить/написать клиенту, не выходя из заказа.
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilledTonalIconButton(onClick = { callClient(order.clientPhone) }) {
+                                Icon(Icons.Default.Phone, contentDescription = "Позвонить")
+                            }
+                            FilledTonalIconButton(onClick = { smsClient(order.clientPhone) }) {
+                                Icon(Icons.Default.Sms, contentDescription = "SMS")
+                            }
+                            FilledTonalIconButton(onClick = { openWhatsAppChat(order.clientPhone) }) {
+                                Icon(Icons.Default.Chat, contentDescription = "WhatsApp")
+                            }
+                            FilledTonalIconButton(onClick = { openTelegramChat(order.clientPhone) }) {
+                                Icon(Icons.Default.Send, contentDescription = "Telegram")
+                            }
                         }
                     }
                 }
