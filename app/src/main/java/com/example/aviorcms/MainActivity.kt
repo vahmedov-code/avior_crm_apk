@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
@@ -30,9 +34,27 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val isLoggedIn by viewModel.isLoggedIn.collectAsState()
 
+                // Анимации переходов — заданы один раз на весь NavHost,
+                // применяются ко всем экранам автоматически (не нужно
+                // прописывать на каждом composable() отдельно). "Вперёд"
+                // (открыли новый экран) — новый выезжает справа, старый
+                // чуть уезжает влево. "Назад" (popBackStack/системная
+                // кнопка назад) — зеркально, старый выезжает справа.
                 NavHost(
                     navController = navController,
-                    startDestination = if (isLoggedIn) "dashboard" else "login"
+                    startDestination = if (isLoggedIn) "dashboard" else "login",
+                    enterTransition = {
+                        slideInHorizontally(initialOffsetX = { it }) + fadeIn()
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut()
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn()
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+                    }
                 ) {
                     composable("login") {
                         LoginScreen(viewModel) {

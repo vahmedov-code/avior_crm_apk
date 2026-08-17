@@ -93,7 +93,7 @@ fun LoginScreen(viewModel: CmsViewModel, onLoggedIn: () -> Unit) {
                         }
                     },
                     enabled = !isLoading && username.isNotBlank() && password.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().height(52.dp).pressScale()
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)

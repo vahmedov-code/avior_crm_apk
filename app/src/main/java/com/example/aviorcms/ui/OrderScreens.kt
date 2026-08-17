@@ -370,7 +370,7 @@ fun AddOrderScreen(
                         priceEstimate.toDoubleOrNull()
                     )
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp).pressScale(),
                 enabled = clientName.isNotBlank() && clientPhone.isNotBlank() &&
                         deviceType.isNotBlank() && description.isNotBlank()
             ) {
