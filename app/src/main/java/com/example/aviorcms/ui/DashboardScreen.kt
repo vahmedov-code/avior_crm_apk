@@ -35,7 +35,11 @@ fun DashboardScreen(
     val orders by viewModel.orders.collectAsState()
     val fullName = remember { TokenStore.getFullName(context) ?: "" }
 
-    LaunchedEffect(Unit) { viewModel.refreshData() }
+    LaunchedEffect(Unit) {
+        viewModel.loadMeta()
+        viewModel.loadOrders(null)
+        viewModel.loadClients(null)
+    }
 
     val cards = remember {
         listOf(
