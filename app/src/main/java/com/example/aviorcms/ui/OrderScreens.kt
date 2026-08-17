@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.aviorcms.ui
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -28,7 +31,6 @@ import androidx.core.net.toUri
 import com.example.aviorcms.CmsViewModel
 import com.example.aviorcms.api.InlineNewClient
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
     viewModel: CmsViewModel,
@@ -138,7 +140,6 @@ fun OrderListScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddOrderScreen(
     viewModel: CmsViewModel,
@@ -345,6 +346,7 @@ fun AddOrderScreen(
     }
 }
 
+@Composable
 fun OrderDetailScreen(
     orderId: Int,
     viewModel: CmsViewModel,
