@@ -159,6 +159,8 @@ fun AddOrderScreen(
     var clientPhone by remember { mutableStateOf("") }
     var clientSource by remember { mutableStateOf<String?>(null) }
     var sourceDropdownExpanded by remember { mutableStateOf(false) }
+    val foundClient by viewModel.foundClientByPhone.collectAsState()
+    var suggestionDismissed by remember { mutableStateOf(false) }
 
     var deviceType by remember { mutableStateOf("") }
     var deviceTypeDropdownExpanded by remember { mutableStateOf(false) }
@@ -175,6 +177,7 @@ fun AddOrderScreen(
     var priceEstimate by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.loadMeta() }
+    DisposableEffect(Unit) { onDispose { viewModel.clearFoundClientByPhone() } }
 
     Scaffold(
         topBar = {
@@ -207,13 +210,46 @@ fun AddOrderScreen(
 
             OutlinedTextField(
                 value = clientPhone,
-                onValueChange = { clientPhone = it },
+                onValueChange = {
+                    clientPhone = it
+                    suggestionDismissed = false
+                    viewModel.searchClientByPhone(it)
+                },
                 label = { Text("Телефон") },
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Подсказка «Найден: ...» — если введённый телефон совпал с
+            // уже существующим клиентом, предлагаем не перепечатывать имя
+            // (сервер и так не создаст дубль по телефону, но так быстрее).
+            if (foundClient != null && !suggestionDismissed && clientName.isBlank()) {
+                Card(
+                    onClick = {
+                        clientName = foundClient!!.fullName
+                        suggestionDismissed = true
+                    },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Найден: ${foundClient!!.fullName}", fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+                            Text("Нажмите, чтобы подставить имя", style = MaterialTheme.typography.labelSmall)
+                        }
+                        IconButton(onClick = { suggestionDismissed = true }) {
+                            Icon(Icons.Default.Close, contentDescription = "Скрыть")
+                        }
+                    }
+                }
+            }
 
             Box {
                 OutlinedTextField(

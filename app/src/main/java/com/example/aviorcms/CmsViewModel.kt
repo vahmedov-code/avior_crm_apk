@@ -12,6 +12,8 @@ import com.example.aviorcms.api.MetaResponse
 import com.example.aviorcms.api.Order
 import com.example.aviorcms.api.TokenStore
 import com.example.aviorcms.api.UpdateStatusRequestWithId
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -114,6 +116,40 @@ class CmsViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (_: Exception) { }
         }
+    }
+
+    private val _foundClientByPhone = MutableStateFlow<Client?>(null)
+    val foundClientByPhone: StateFlow<Client?> = _foundClientByPhone.asStateFlow()
+    private var phoneSearchJob: Job? = null
+
+    /**
+     * Подсказка «Найден: ...» на экране нового заказа (§7 PROJECT_STATE.md) —
+     * ищет клиента по телефону, только когда введено похожее на полный
+     * номер количество цифр (не долбим сервер на каждый символ), с
+     * debounce 500мс (не на каждое нажатие клавиши). Отменяет предыдущий
+     * незавершённый поиск, если пользователь продолжает печатать.
+     */
+    fun searchClientByPhone(phone: String) {
+        phoneSearchJob?.cancel()
+        val digits = phone.filter { it.isDigit() }
+        if (digits.length < 10) {
+            _foundClientByPhone.value = null
+            return
+        }
+        phoneSearchJob = viewModelScope.launch {
+            delay(500)
+            try {
+                val response = api.findClientByPhone(phone)
+                _foundClientByPhone.value = if (response.isSuccessful) response.body()?.client else null
+            } catch (_: Exception) {
+                _foundClientByPhone.value = null
+            }
+        }
+    }
+
+    fun clearFoundClientByPhone() {
+        phoneSearchJob?.cancel()
+        _foundClientByPhone.value = null
     }
 
     fun updateOrderStatus(orderId: Int, status: String, comment: String? = null) {

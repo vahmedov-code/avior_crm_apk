@@ -45,6 +45,12 @@ data class ClientsResponse(
     val clients: List<Client>?
 )
 
+/** Ответ на GET clients.php?phone=... — client=null, если по этому телефону никого не нашли. */
+data class ClientResponse(
+    val ok: Boolean,
+    val client: Client?
+)
+
 data class InlineNewClient(
     @SerializedName("full_name") val fullName: String,
     val phone: String,

@@ -23,6 +23,9 @@ interface ApiService {
     @GET("clients.php")
     suspend fun getClients(@Query("q") query: String? = null): Response<ClientsResponse>
 
+    @GET("clients.php")
+    suspend fun findClientByPhone(@Query("phone") phone: String): Response<ClientResponse>
+
     @POST("clients.php")
     suspend fun createClient(@Body client: InlineNewClient): Response<SimpleOkResponse>
 
