@@ -26,7 +26,9 @@ data class User(
 data class MetaResponse(
     val ok: Boolean,
     val statuses: List<String>?,
-    @SerializedName("client_sources") val clientSources: Map<String, String>?
+    @SerializedName("client_sources") val clientSources: Map<String, String>?,
+    @SerializedName("device_types") val deviceTypes: List<String>?,
+    @SerializedName("device_models") val deviceModels: List<String>?
 )
 
 data class Client(

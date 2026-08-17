@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.example.aviorcms.CmsViewModel
@@ -143,25 +145,35 @@ fun AddOrderScreen(
     onOrderAdded: (Int?, InlineNewClient?, String, String?, String, Double?) -> Unit,
     onBack: () -> Unit
 ) {
-    val clients by viewModel.clients.collectAsState()
     val meta by viewModel.meta.collectAsState()
 
-    var isNewClient by remember { mutableStateOf(false) }
-
-    var selectedClientId by remember { mutableStateOf<Int?>(null) }
-    var newClientName by remember { mutableStateOf("") }
-    var newClientPhone by remember { mutableStateOf("") }
-    var newClientSource by remember { mutableStateOf<String?>(null) }
-
-    var deviceType by remember { mutableStateOf("") }
-    var deviceModel by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var priceEstimate by remember { mutableStateOf("0") }
-
-    var clientDropdownExpanded by remember { mutableStateOf(false) }
+    // Упрощено 19.08: приложение — только для оперативного занесения
+    // заказа с выезда/на месте, без выбора "существующий клиент" (это
+    // теперь делается на десктопе). Каждый раз — новое ФИО+телефон;
+    // дедупликация по телефону происходит на сервере автоматически
+    // (find_or_create_client() в functions.php) — если клиент с таким
+    // номером уже есть, сервер сам подставит существующую запись, не
+    // будет дублей, даже если ввели одного и того же клиента дважды.
+    var clientName by remember { mutableStateOf("") }
+    var clientPhone by remember { mutableStateOf("") }
+    var clientSource by remember { mutableStateOf<String?>(null) }
     var sourceDropdownExpanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { viewModel.loadClients(null) }
+    var deviceType by remember { mutableStateOf("") }
+    var deviceTypeDropdownExpanded by remember { mutableStateOf(false) }
+
+    var deviceModel by remember { mutableStateOf("") }
+    var modelSuggestionsExpanded by remember { mutableStateOf(false) }
+    val modelSuggestions = remember(deviceModel, meta) {
+        val all = meta?.deviceModels ?: emptyList()
+        if (deviceModel.isBlank()) emptyList()
+        else all.filter { it.contains(deviceModel, ignoreCase = true) }.take(8)
+    }
+
+    var description by remember { mutableStateOf("") }
+    var priceEstimate by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) { viewModel.loadMeta() }
 
     Scaffold(
         topBar = {
@@ -183,113 +195,113 @@ fun AddOrderScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = !isNewClient, onClick = { isNewClient = false })
-                    Text("Существующий клиент", modifier = Modifier.clickable { isNewClient = false })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = isNewClient, onClick = { isNewClient = true })
-                    Text("Новый клиент", modifier = Modifier.clickable { isNewClient = true })
-                }
-            }
+            OutlinedTextField(
+                value = clientName,
+                onValueChange = { clientName = it },
+                label = { Text("ФИО клиента") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            if (!isNewClient) {
-                Box {
-                    OutlinedTextField(
-                        value = clients.find { it.id == selectedClientId }?.fullName ?: "Выберите клиента",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Клиент") },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    DropdownMenu(
-                        expanded = clientDropdownExpanded,
-                        onDismissRequest = { clientDropdownExpanded = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (clients.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("Нет клиентов") },
-                                onClick = { }
-                            )
-                        } else {
-                            // Сортируем для удобства
-                            clients.sortedBy { it.fullName }.forEach { client ->
-                                DropdownMenuItem(
-                                    text = { Text("${client.fullName} (${client.phone})") },
-                                    onClick = {
-                                        selectedClientId = client.id
-                                        clientDropdownExpanded = false
-                                    }
-                                )
+            OutlinedTextField(
+                value = clientPhone,
+                onValueChange = { clientPhone = it },
+                label = { Text("Телефон") },
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Box {
+                OutlinedTextField(
+                    value = meta?.clientSources?.get(clientSource) ?: "Источник (необязательно)",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Источник") },
+                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                DropdownMenu(
+                    expanded = sourceDropdownExpanded,
+                    onDismissRequest = { sourceDropdownExpanded = false }
+                ) {
+                    meta?.clientSources?.forEach { (key, value) ->
+                        DropdownMenuItem(
+                            text = { Text(value) },
+                            onClick = {
+                                clientSource = key
+                                sourceDropdownExpanded = false
                             }
-                        }
+                        )
                     }
-                    Box(modifier = Modifier.matchParentSize().clickable { clientDropdownExpanded = true })
                 }
-            } else {
-                OutlinedTextField(
-                    value = newClientName,
-                    onValueChange = { newClientName = it },
-                    label = { Text("Имя нового клиента") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = newClientPhone,
-                    onValueChange = { newClientPhone = it },
-                    label = { Text("Телефон") },
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Box {
-                    OutlinedTextField(
-                        value = meta?.clientSources?.get(newClientSource) ?: "Источник",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Источник") },
-                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    DropdownMenu(
-                        expanded = sourceDropdownExpanded,
-                        onDismissRequest = { sourceDropdownExpanded = false }
-                    ) {
-                        meta?.clientSources?.forEach { (key, value) ->
-                            DropdownMenuItem(
-                                text = { Text(value) },
-                                onClick = {
-                                    newClientSource = key
-                                    sourceDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                    Box(Modifier.matchParentSize().clickable { sourceDropdownExpanded = true })
-                }
+                Box(Modifier.matchParentSize().clickable { sourceDropdownExpanded = true })
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
-            OutlinedTextField(
-                value = deviceType,
-                onValueChange = { deviceType = it },
-                label = { Text("Тип устройства") },
-                placeholder = { Text("Ноутбук / смартфон / ПК") },
-                leadingIcon = { Icon(Icons.Default.Build, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Тип устройства — только выбор из списка, что реально
+            // ремонтируем, без ручного ввода (список приходит с сервера,
+            // тот же самый, что в веб-CRM — device_type_options()).
+            Box {
+                OutlinedTextField(
+                    value = deviceType.ifBlank { "Тип устройства" },
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Тип устройства") },
+                    leadingIcon = { Icon(Icons.Default.Build, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                DropdownMenu(
+                    expanded = deviceTypeDropdownExpanded,
+                    onDismissRequest = { deviceTypeDropdownExpanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    meta?.deviceTypes?.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(type) },
+                            onClick = {
+                                deviceType = type
+                                deviceTypeDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+                Box(Modifier.matchParentSize().clickable { deviceTypeDropdownExpanded = true })
+            }
 
-            OutlinedTextField(
-                value = deviceModel,
-                onValueChange = { deviceModel = it },
-                label = { Text("Модель") },
-                leadingIcon = { Icon(Icons.Default.Devices, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Модель — свободный ввод, но с подсказками из каталога
+            // моделей веб-CRM (~200 популярных) — фильтр на лету по мере
+            // набора, без отдельного запроса на сервер.
+            Box {
+                OutlinedTextField(
+                    value = deviceModel,
+                    onValueChange = {
+                        deviceModel = it
+                        modelSuggestionsExpanded = it.isNotBlank()
+                    },
+                    label = { Text("Модель") },
+                    leadingIcon = { Icon(Icons.Default.Devices, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                DropdownMenu(
+                    expanded = modelSuggestionsExpanded && modelSuggestions.isNotEmpty(),
+                    onDismissRequest = { modelSuggestionsExpanded = false },
+                    properties = androidx.compose.ui.window.PopupProperties(focusable = false)
+                ) {
+                    modelSuggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion) },
+                            onClick = {
+                                deviceModel = suggestion
+                                modelSuggestionsExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = description,
@@ -303,7 +315,7 @@ fun AddOrderScreen(
             OutlinedTextField(
                 value = priceEstimate,
                 onValueChange = { if (it.all { char -> char.isDigit() }) priceEstimate = it },
-                label = { Text("Оценка стоимости, ₽") },
+                label = { Text("Оценка стоимости, ₽ (необязательно)") },
                 leadingIcon = { Icon(Icons.Default.MonetizationOn, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -311,12 +323,9 @@ fun AddOrderScreen(
             Spacer(Modifier.height(8.dp))
             Button(
                 onClick = {
-                    val inlineClient = if (isNewClient) {
-                        InlineNewClient(fullName = newClientName, phone = newClientPhone, source = newClientSource)
-                    } else null
-
+                    val inlineClient = InlineNewClient(fullName = clientName, phone = clientPhone, source = clientSource)
                     onOrderAdded(
-                        if (isNewClient) null else selectedClientId,
+                        null,
                         inlineClient,
                         deviceType,
                         deviceModel.ifBlank { null },
@@ -325,7 +334,7 @@ fun AddOrderScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = (isNewClient && newClientName.isNotBlank() && newClientPhone.isNotBlank() || !isNewClient && selectedClientId != null) &&
+                enabled = clientName.isNotBlank() && clientPhone.isNotBlank() &&
                         deviceType.isNotBlank() && description.isNotBlank()
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
@@ -336,8 +345,6 @@ fun AddOrderScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun OrderDetailScreen(
     orderId: Int,
     viewModel: CmsViewModel,
