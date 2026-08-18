@@ -7,8 +7,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,8 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.example.aviorcms.R
 import com.example.aviorcms.ui.theme.StatusBlue
 import com.example.aviorcms.ui.theme.StatusGreen
 import com.example.aviorcms.ui.theme.StatusGrey
@@ -84,6 +94,32 @@ fun openTelegramChat(context: Context, phone: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, "tg://resolve?phone=$cleanPhone".toUri()))
     } catch (_: Exception) {
         Toast.makeText(context, "Telegram не установлен, либо номер не привязан к аккаунту", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/**
+ * Ряд из 4 иконок быстрой связи — готовый компонент поверх функций
+ * выше, чтобы не собирать Row из 4 FilledTonalIconButton вручную в
+ * каждом месте (используется в ClientDetailScreen). Настоящие логотипы
+ * WhatsApp/Telegram — res/drawable/ic_whatsapp.xml, ic_telegram.xml
+ * (Bootstrap Icons, MIT).
+ */
+@Composable
+fun QuickContactRow(phone: String) {
+    val context = LocalContext.current
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        FilledTonalIconButton(onClick = { callClient(context, phone) }) {
+            Icon(Icons.Default.Phone, contentDescription = "Позвонить")
+        }
+        FilledTonalIconButton(onClick = { smsClient(context, phone) }) {
+            Icon(Icons.Default.Sms, contentDescription = "SMS")
+        }
+        FilledTonalIconButton(onClick = { openWhatsAppChat(context, phone) }) {
+            Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "WhatsApp")
+        }
+        FilledTonalIconButton(onClick = { openTelegramChat(context, phone) }) {
+            Icon(painterResource(id = R.drawable.ic_telegram), contentDescription = "Telegram")
+        }
     }
 }
 

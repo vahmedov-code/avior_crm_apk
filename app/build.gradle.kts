@@ -4,6 +4,31 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
 }
 
+/**
+ * Версия приложения — та же логика, что и у веб-CRM (обсуждали 19.08):
+ * первый коммит = 1.00, каждый следующий = +0.01. У приложения нет
+ * сервера, который может спросить git на лету при каждом открытии
+ * (как это делает веб-CRM) — здесь версия считается один раз, во время
+ * СБОРКИ (Gradle читает git прямо тут, в конфигурации). Раз пересборка
+ * и так обязательна после каждого git pull — версия обновится ровно
+ * тогда, когда нужно.
+ */
+fun gitCommitCount(): Int {
+    return try {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .directory(rootDir)
+            .redirectErrorStream(true)
+            .start()
+        process.waitFor()
+        process.inputStream.bufferedReader().readText().trim().toIntOrNull() ?: 1
+    } catch (e: Exception) {
+        1
+    }
+}
+
+val gitCommits = gitCommitCount()
+val appVersionName = String.format("%.2f", 1.00 + (gitCommits - 1) * 0.01)
+
 android {
     namespace = "com.example.aviorcms"
     compileSdk = 34
@@ -12,8 +37,8 @@ android {
         applicationId = "com.example.aviorcms"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitCommits
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
