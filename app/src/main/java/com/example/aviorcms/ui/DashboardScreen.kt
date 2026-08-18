@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.aviorcms.CmsViewModel
 import com.example.aviorcms.api.TokenStore
 import androidx.compose.ui.platform.LocalContext
+import com.example.aviorcms.BuildConfig
 
 private data class PipelineCard(val label: String, val statuses: List<String>, val color: androidx.compose.ui.graphics.Color)
 
@@ -112,6 +113,18 @@ fun DashboardScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
             }
         }
     }

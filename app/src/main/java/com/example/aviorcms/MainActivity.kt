@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.aviorcms.ui.AddOrderScreen
+import com.example.aviorcms.ui.ClientDetailScreen
 import com.example.aviorcms.ui.ClientsScreen
 import com.example.aviorcms.ui.DashboardScreen
 import com.example.aviorcms.ui.LoginScreen
@@ -97,7 +98,23 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("clients") {
-                        ClientsScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
+                        ClientsScreen(
+                            viewModel = viewModel,
+                            onClientClick = { clientId -> navController.navigate("client_detail/$clientId") },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        "client_detail/{clientId}",
+                        arguments = listOf(navArgument("clientId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val clientId = backStackEntry.arguments?.getInt("clientId") ?: return@composable
+                        ClientDetailScreen(
+                            clientId = clientId,
+                            viewModel = viewModel,
+                            onBack = { navController.popBackStack() }
+                        )
                     }
 
                     composable("add_order") {

@@ -1,5 +1,8 @@
 package com.example.aviorcms.ui
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.example.aviorcms.ui.theme.StatusBlue
 import com.example.aviorcms.ui.theme.StatusGreen
 import com.example.aviorcms.ui.theme.StatusGrey
@@ -43,6 +47,44 @@ fun getStatusColor(status: String): Color = when (status) {
     "выдан" -> StatusGrey
     "отказ" -> StatusRed
     else -> StatusGrey
+}
+
+/** Быстрая связь с клиентом (звонок). */
+fun callClient(context: Context, phone: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_DIAL, "tel:$phone".toUri()))
+    } catch (_: Exception) {
+        Toast.makeText(context, "Не удалось открыть набор номера", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Быстрая связь с клиентом (SMS). */
+fun smsClient(context: Context, phone: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_SENDTO, "smsto:$phone".toUri()))
+    } catch (_: Exception) {
+        Toast.makeText(context, "Не удалось открыть SMS", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Быстрая связь с клиентом (WhatsApp). */
+fun openWhatsAppChat(context: Context, phone: String) {
+    try {
+        val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+        context.startActivity(Intent(Intent.ACTION_VIEW, "https://api.whatsapp.com/send?phone=$cleanPhone".toUri()))
+    } catch (_: Exception) {
+        Toast.makeText(context, "WhatsApp не установлен", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Быстрая связь с клиентом (Telegram). */
+fun openTelegramChat(context: Context, phone: String) {
+    try {
+        val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+        context.startActivity(Intent(Intent.ACTION_VIEW, "tg://resolve?phone=$cleanPhone".toUri()))
+    } catch (_: Exception) {
+        Toast.makeText(context, "Telegram не установлен, либо номер не привязан к аккаунту", Toast.LENGTH_SHORT).show()
+    }
 }
 
 /**
