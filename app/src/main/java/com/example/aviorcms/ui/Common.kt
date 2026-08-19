@@ -34,6 +34,7 @@ import com.example.aviorcms.ui.theme.StatusBlue
 import com.example.aviorcms.ui.theme.StatusGreen
 import com.example.aviorcms.ui.theme.StatusGrey
 import com.example.aviorcms.ui.theme.StatusRed
+import com.example.aviorcms.ui.theme.StatusOrange
 import com.example.aviorcms.ui.theme.StatusYellow
 
 /** Иконки по типу устройства — те же смысловые значки, что в веб-CRM. */
@@ -52,6 +53,7 @@ fun getDeviceIcon(deviceType: String): String = when {
 fun getStatusColor(status: String): Color = when (status) {
     "принят" -> StatusBlue
     "диагностика", "согласование" -> StatusYellow
+    "ждёт детали" -> StatusOrange
     "в ремонте" -> StatusBlue
     "готов" -> StatusGreen
     "выдан" -> StatusGrey

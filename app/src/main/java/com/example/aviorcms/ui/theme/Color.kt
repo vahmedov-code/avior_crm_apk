@@ -8,6 +8,7 @@ val AviorGold = Color(0xFFE0B45C)
 val AviorGoldDark = Color(0xFFC98A4B)
 
 val StatusYellow = Color(0xFF8A6D1F)
+val StatusOrange = Color(0xFFB3651E)
 val StatusBlue = Color(0xFF1C5FAA)
 val StatusGreen = Color(0xFF1E7E34)
 val StatusGrey = Color(0xFF6B7385)

@@ -45,7 +45,7 @@ fun DashboardScreen(
     val cards = remember {
         listOf(
             PipelineCard("Новые", listOf("принят"), com.example.aviorcms.ui.theme.StatusBlue),
-            PipelineCard("В работе", listOf("диагностика", "в ремонте"), com.example.aviorcms.ui.theme.StatusYellow),
+            PipelineCard("В работе", listOf("диагностика", "ждёт детали", "в ремонте"), com.example.aviorcms.ui.theme.StatusYellow),
             PipelineCard("Отложены", listOf("согласование"), com.example.aviorcms.ui.theme.StatusYellow),
             PipelineCard("Готовы", listOf("готов"), com.example.aviorcms.ui.theme.StatusGreen),
             PipelineCard("Выданы", listOf("выдан"), com.example.aviorcms.ui.theme.StatusGrey),
