@@ -67,7 +67,8 @@ data class RepairPart(
     val name: String,
     val qty: String,
     val price: String,
-    val category: String? // "part" | "service"
+    val category: String?, // "part" | "service"
+    val discount: String? = null // % скидки на позицию (0-100), null = без скидки
 )
 
 data class Order(
